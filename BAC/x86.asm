@@ -16,6 +16,8 @@ free_char db '-'
 
 not_free_chars db 4 dup('-'), 0
 
+ans db 4 dup('-'), 0
+
 .code
 extern printf :PROC
 extern scanf :PROC
@@ -129,9 +131,55 @@ call find_free_and_not_free_chars
 cmp al, -1
 jz COMPUTER_IS_TOO_GOOD
 
+mov esi, 0
 
+next_char:
 
+; check if we found it
+cmp esi, 4
+je COMPUTER_IS_GOOD
+
+mov bl, [not_free_chars + esi]
+mov ecx, 0 ; position of char in ans
+
+inc esi
+next:
+
+mov al, [ans + ecx]
+cmp al, '-'
+je fine
+inc ecx
+jmp next
+fine:
+lea eax, number
+mov dl, free_char
+mov [eax], dl
+mov [eax + 1], dl
+mov [eax + 2], dl
+mov [eax + 3], dl
+
+mov [eax + ecx], bl
+push eax
+push ebx
+push ecx
+call ask
+pop ecx
+pop ebx
+pop eax
+
+inc ecx
+mov ax, N
+cmp ax, 1
+jne next
+
+mov [ans + ecx - 1], bl
+jmp next_char
+
+COMPUTER_IS_GOOD:
+lea eax, ans
+ret
 COMPUTER_IS_TOO_GOOD:
+lea eax, number
 ret
 guess ENDP
 end

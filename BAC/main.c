@@ -21,7 +21,8 @@ int main() {
 	}
 	else if (menu == 2) {
 		printf("Ok...\n");
-		guess();
+		char* ptr = guess();
+		printf("%s is your number, and you are noob...", ptr);
 		printf("It was too easy...");
 	}
 	else if (menu == 3) {
