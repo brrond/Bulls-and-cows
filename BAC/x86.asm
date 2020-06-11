@@ -3,22 +3,34 @@
 .stack 100h
 
 .data
+; common data
+number db "0000", 0
+N dw 0 ; bulls
+M dw 0 ; cows
+
+; data for guess function
 msg_hello db "Ok, I will try", 10, 0
 msg_tf db "Number %s", 10, 0
 msg_for_scanf db "%hu %hu", 0
-
-number db "0000", 0
-
-N dw 0 ; bulls
-M dw 0 ; cows
 
 free_char db '-'
 
 not_free_chars db 4 dup('-'), 0
 
 ans db 4 dup('-'), 0
+; end of data for guess function
+; data for figure_out function
+msg_hello_fo db "Ok, good luck", 10, 0
+msg_ask_fo db "Enter four digit number : ", 0
+msg_ask_fo_2 db "%s", 0
+msg_for_bc_count db "Bulls : %d, cows : %d", 10, 0
 
+numbers_for_check db "0000000000"
+numbers_for_check_copy db "0000000000"
+
+; end of ALL data
 .code
+
 extern printf :PROC
 extern scanf :PROC
 
@@ -182,4 +194,138 @@ COMPUTER_IS_TOO_GOOD:
 lea eax, number
 ret
 guess ENDP
+
+; or get number function
+ask_fo proc
+lea eax, msg_ask_fo
+push eax
+call printf
+
+pop eax
+
+lea eax, number
+push eax
+lea eax, msg_ask_fo_2
+push eax
+call scanf
+pop eax
+pop eax
+ret
+ask_fo endp
+
+public figure_out
+figure_out PROC
+push ebp
+mov ebp, esp
+
+mov esi, [ebp + 8] ; there is a pointer to COMPUTER number int ESI
+lea eax, msg_hello_fo
+push eax
+call printf
+pop eax
+
+mov ecx, 4
+mov eax, 0
+tmp_loop:
+mov al, [esi + ecx - 1]
+sub al, '0'
+mov bl, [numbers_for_check + eax]
+inc bl
+mov [numbers_for_check + eax], bl
+loop tmp_loop
+
+
+
+main_loop_fo:
+mov N, 0
+mov M, 0
+
+call ask_fo
+
+; if player won (check)
+mov ecx, 4
+check_player_won_f:
+mov al, [esi + ecx - 1]
+cmp al, [number + ecx - 1]
+jne end_of_player_won_check
+cmp ecx, 1
+je PLAYER_IS_NOT_BAD
+loop check_player_won_f
+end_of_player_won_check:
+
+; if player is CO CO CO
+; calc bulls count
+mov ecx, 4
+calc_bulls_count:
+mov al, [esi + ecx - 1]
+cmp al, [number + ecx - 1]
+jne next_calc_bulls_count_it
+mov ax, N
+inc ax
+mov N, ax
+next_calc_bulls_count_it:
+loop calc_bulls_count
+
+mov al, [numbers_for_check]
+mov [numbers_for_check_copy], al
+mov al, [numbers_for_check + 1]
+mov [numbers_for_check_copy + 1], al
+mov al, [numbers_for_check + 2]
+mov [numbers_for_check_copy + 2], al
+mov al, [numbers_for_check + 3]
+mov [numbers_for_check_copy + 3], al
+mov al, [numbers_for_check + 4]
+mov [numbers_for_check_copy + 4], al
+mov al, [numbers_for_check + 5]
+mov [numbers_for_check_copy + 5], al
+mov al, [numbers_for_check + 6]
+mov [numbers_for_check_copy + 6], al
+mov al, [numbers_for_check + 7]
+mov [numbers_for_check_copy + 7], al
+mov al, [numbers_for_check + 8]
+mov [numbers_for_check_copy + 8], al
+mov al, [numbers_for_check + 9]
+mov [numbers_for_check_copy + 9], al
+
+
+mov ecx, 4
+mov eax, 0
+mov ebx, 0
+mov M, 0
+calc_cows_count:
+mov al, [number + ecx - 1]
+sub al, '0'
+mov bl, [numbers_for_check_copy + eax]
+mov [numbers_for_check_copy + eax], '0'
+sub bl, '0'
+mov dx, M
+add dx, bx
+mov M, dx
+loop calc_cows_count
+
+mov ax, M
+mov bx, N
+sub ax, bx
+mov M, ax
+
+; show bulls and cows count
+mov eax, 0
+mov ax, M
+push eax
+mov ax, N
+push eax
+lea eax, msg_for_bc_count
+push eax
+call printf
+pop eax
+pop eax
+pop eax
+
+jmp main_loop_fo
+
+PLAYER_IS_NOT_BAD:
+pop ebp
+ret
+figure_out endp
+
 end
